@@ -133,9 +133,20 @@ def do_one_framework(path):
 	# 备份一下framework 
 	framework_file = os.path.join(path,framework_name)
 	backup_framework_file = os.path.join(path,framework_name+'_backup')
+	orignal_backup_framework_file = os.path.join(path,framework_name+'_backup_orignal')
+
+	# 最原始的backup
+	if os.path.exists(orignal_backup_framework_file):
+		pass
+	else:
+		safe_log(framework_name+':will be checked')
+		shutil.copyfile(framework_file,orignal_backup_framework_file)
+
+	# 每次for循环的backup
 	if os.path.exists(backup_framework_file):
-		safe_log(framework_name+':current framework have existed that has been checked')
-		return
+		pass
+		# safe_log(framework_name+':current framework have existed that has been checked')
+		# return
 	else:
 		safe_log(framework_name+':will be checked')
 		shutil.copyfile(framework_file,backup_framework_file)
@@ -180,7 +191,7 @@ def do_one_framework(path):
 		shutil.copyfile(framework_name+'_backup',framework_name)
 
 	if len(can_remove_mach_o_list) == 0:
-		safe_log('current framework can not be thin: '+framework_name)
+		pass
 	elif all_mach_o_names == can_remove_mach_o_list:
 		safe_log('current framework that the project did not used: '+framework_name)
 		safe_log('*************** please remove️ '+framework_name+' manually ***************')
@@ -188,7 +199,11 @@ def do_one_framework(path):
 		safe_log('current framework can be removed list:')
 		safe_log(can_remove_mach_o_list)
 		create_new_framework_with_remove_file_list(path,framework_support_archs,can_remove_mach_o_list)
-
+		
+		#开启递归前需要删除 backup
+		safe_remove_path(framework_name+'_backup')
+		# 递归调用自己
+		do_one_framework(path)
 
 def create_new_framework_with_remove_file_list(path,framework_support_archs,remove_file_list):
 
