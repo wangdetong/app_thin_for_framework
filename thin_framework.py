@@ -95,38 +95,40 @@ def create_new_arch_with_remove_mach_o_list(path,arch_name,remove_file_list):
 	framework_name = get_framework_name_with_path(path)
 	# 2,把fat 拆成 单个架构：比如 armv7, 并生成文件夹armv7_dir
 	one_arch_name = arch_name+'_'+remove_file_name
-	one_arch_dir_name = one_arch_name+'_dir'
 	cmd_split = 'lipo '+framework_name+' -thin '+arch_name+' -output '+one_arch_name
 	(status,info) = safe_do_shell_cmd(cmd_split)
+	for mach_o_file in remove_file_list:
+		cmd_remove_one_mach_o = 'ar -d -sv '+one_arch_name+' '+ mach_o_file+'.o'
+		(status,info) = safe_do_shell_cmd(cmd_remove_one_mach_o)
+	# # 确保没有改dir 不存在
+	# one_arch_dir_name = one_arch_name+'_dir'
+	# safe_remove_path(one_arch_dir_name)
+	# os.mkdir(one_arch_dir_name)
+	# shutil.move(one_arch_name,one_arch_dir_name)
 
-	# 确保没有改dir 不存在
-	safe_remove_path(one_arch_dir_name)
-	os.mkdir(one_arch_dir_name)
-	shutil.move(one_arch_name,one_arch_dir_name)
+	# os.chdir(one_arch_dir_name)
+	# # 3,将armv7 拆成 mach-o集合
+	# cmd_arch_to_mach_o = 'ar xv '+one_arch_name
+	# (status,info) = safe_do_shell_cmd(cmd_arch_to_mach_o)
 
-	os.chdir(one_arch_dir_name)
-	# 3,将armv7 拆成 mach-o集合
-	cmd_arch_to_mach_o = 'ar xv '+one_arch_name
-	(status,info) = safe_do_shell_cmd(cmd_arch_to_mach_o)
-
-	# 传来的removefile 是否在 新生成的文件夹存在
-	mach_o_list = get_mach_o_list_at_framework(os.getcwd())
+	# # 传来的removefile 是否在 新生成的文件夹存在
+	# mach_o_list = get_mach_o_list_at_framework(os.getcwd())
 	
-	# 防止 remove_file_name 不存在，需要把上面添加的dir 删除掉
-	if remove_file_name not in mach_o_list:
-		back_to_super_dir()
-		safe_remove_path(one_arch_dir_name)
-		return
+	# # 防止 remove_file_name 不存在，需要把上面添加的dir 删除掉
+	# if remove_file_name not in mach_o_list:
+	# 	back_to_super_dir()
+	# 	safe_remove_path(one_arch_dir_name)
+	# 	return
 
-	# 4, 删除 指定的.o文件
-	for filename in remove_file_list:
-		safe_remove_path(filename+".o")
+	# # 4, 删除 指定的.o文件
+	# for filename in remove_file_list:
+	# 	safe_remove_path(filename+".o")
 	
-	# 5,ar 生成新的 arch
-	back_to_super_dir()
-	cmd_gather_to_new_arch = 'ar rcs '+one_arch_name+' '+one_arch_dir_name+'/*.o'
-	(status,info) = safe_do_shell_cmd(cmd_gather_to_new_arch)
-	safe_remove_path(one_arch_dir_name)
+	# # 5,ar 生成新的 arch
+	# back_to_super_dir()
+	# cmd_gather_to_new_arch = 'ar rcs '+one_arch_name+' '+one_arch_dir_name+'/*.o'
+	# (status,info) = safe_do_shell_cmd(cmd_gather_to_new_arch)
+	# safe_remove_path(one_arch_dir_name)
 
 def do_one_framework(path):
 	framework_name = get_framework_name_with_path(path)
